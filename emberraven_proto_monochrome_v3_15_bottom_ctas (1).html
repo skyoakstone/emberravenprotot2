@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ember Raven – Your Personal Resource Navigator (v3.6)</title>
+<style>
+:root{--bg:#ffffff; --card:#ffffff; --text:#111111; --muted:#575757; --border:#d9d9d9; --surface:#f6f6f6;--accent:#111111; --chip:#f3f3f3;}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto}
+a{color:var(--text);text-decoration:underline} header,.container{max-width:980px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;gap:12px;justify-content:space-between;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700} .logo .icon{font-size:24px} .nav{display:flex;gap:16px;font-size:14px;color:var(--muted);align-items:center}
+.lang-toggle{display:flex;gap:6px;align-items:center} .lang-btn{border:1px solid var(--border);background:#fff;padding:6px 10px;border-radius:999px;cursor:pointer;font-size:13px}
+.lang-btn[aria-pressed="true"]{background:#111;color:#fff;border-color:#111}
+.nav .navlink{border:1px solid var(--border);background:#fff;color:#111;border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px}
+.nav .navlink:hover{filter:brightness(.97)}
+.hero{padding:24px 16px} h1{font-size:28px;margin:0 0 8px} .sub{color:var(--muted);margin-bottom:16px}
+.address{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.input{background:#fff;border:1px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;min-width:260px;flex:1}
+.btn{background:#eaeaea;color:#111;border:1px solid var(--border);padding:12px 16px;border-radius:10px;font-weight:700;cursor:pointer}
+.btn.secondary{background:#fff;color:#111;border:1px solid var(--border)} .btn.small{padding:10px 12px;font-size:14px;border-radius:10px} .btn.ghost{background:transparent;color:#111;border:1px solid var(--border)}
+.renter{display:flex;gap:10px;align-items:center;margin:6px 0 12px}
+.renter input{width:18px;height:18px} .renter label{font-weight:600}
+.renter .hint{font-size:13px;color:var(--muted)}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(1,minmax(0,1fr))} @media (min-width:640px){ .grid{grid-template-columns:repeat(2,1fr)} } @media (min-width:900px){ .grid{grid-template-columns:repeat(3,1fr)} }
+.card-toggle{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;position:relative;transition:transform .05s ease}
+.card-toggle:active{transform:scale(.99)} .card-toggle[aria-pressed="true"]{outline:2px solid var(--accent)} .card-toggle .ico{font-size:22px;margin-top:2px}
+.card-toggle .title{font-weight:700;margin-bottom:4px;font-size:16px} .card-toggle .desc{color:var(--muted);font-size:14px} .chipbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 6px}
+.chip{background:var(--chip);border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:13px}
+.section-title{margin:18px 0 8px;font-size:18px;font-weight:800} .muted{color:var(--muted)}
+/* Accordion + strategies */ .accordion{margin:18px 0} .acc-item{border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;background:var(--card)}
+.acc-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;font-weight:700;background:var(--surface)} .acc-body{display:none;padding:10px 12px 14px}
+.acc-item[data-open="true"] .acc-body{display:block}
+.strategy{border:1px solid var(--border);border-radius:12px;margin:10px 0;overflow:hidden;background:#fff}
+.strategy-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#fff;border-bottom:1px solid var(--border);cursor:pointer}
+.strategy-head .label{font-weight:700;font-size:16px}
+.strategy-body{display:none;padding:10px 12px;background:#fff}
+.strategy[data-open="true"] .strategy-body{display:block}
+.subgrid{display:grid;gap:10px;grid-template-columns:repeat(1,minmax(0,1fr))} @media (min-width:640px){ .subgrid{grid-template-columns:repeat(2,1fr)} } @media (min-width:900px){ .subgrid{grid-template-columns:repeat(3,1fr)} }
+.action-toggle{display:block;width:100%;text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:#fff;color:#111;cursor:pointer;font-size:16px;line-height:1.3}
+.action-toggle[aria-pressed="true"]{background:#f0f0f0;outline:2px solid #333} .action-blurb{display:block;color:var(--muted);font-size:14px;margin-top:6px}
+/* Report panels */ .report{margin:22px 0 120px} .panel{border:1px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden;background:var(--card)}
+.panel h3{margin:0;padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);font-size:16px}
+.panel .content{padding:12px} .list{display:grid;gap:10px} .item{border:1px solid var(--border);border-radius:12px;padding:10px;background:#fff}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;background:#f3f3f3;border:1px solid var(--border);font-size:12px;color:var(--muted)}
+/* Sticky footer */ .sticky-footer{position:fixed;left:0;right:0;bottom:0;background:#f9f9f9;border-top:1px solid var(--border);padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.sticky-footer .footer-cta{flex:1 1 220px;text-align:center}
+.footer-cta{background:#f0f0f0;border:1px solid var(--border);color:#111;padding:10px 14px;border-radius:10px;cursor:pointer} .footer-cta.primary{background:#111;color:#fff;border:1px solid #111}
+/* Wizard toolbar */ .wizbar{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin:8px 0}
+.wizbar .btn.small{min-width:140px}
+/* Focus styles */ :focus-visible{outline:3px solid #000; outline-offset:2px}
+/* SR-only utility */ .sr-only{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;}
+.toast{position:fixed;right:16px;bottom:16px;background:#111;color:#fff;padding:10px 14px;border-radius:10px;display:none}
+.count{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<a href="#categories" class="sr-only">Skip to content</a>
+<header role="banner">
+  <div class="logo"><span class="icon">🔥</span><span data-i18n="brand">Ember Raven – Your Personal Resource Navigator</span></div>
+  <nav class="nav" role="navigation" aria-label="Main">
+    <span data-i18n="howItWorks">How it works</span>
+    <button class="navlink" id="navFindContractors" data-i18n="navFindContractors">Find Contractors</button>
+    <button class="navlink" id="navFindResources" data-i18n="navFindResources">Find Resources</button>
+    <span data-i18n="about">About</span>
+    <div class="lang-toggle" role="group" aria-label="Language toggle">
+      <button id="lang-en" class="lang-btn" aria-pressed="true">EN</button>
+      <button id="lang-es" class="lang-btn" aria-pressed="false">ES</button>
+    </div>
+  </nav>
+</header>
+
+<div class="container hero">
+  <h1 data-i18n="heroTitle">Plan for Wildfire - Protect What Matters</h1>
+  <p class="sub" data-i18n="heroSub">Pick what you want to work on; we’ll tailor readiness knowledge, assistance, and local resources to your location.</p>
+
+  <div class="address">
+    <label for="addr" class="sr-only">Address</label>
+    <input class="input" id="addr" placeholder="Enter address (optional)" data-i18n-placeholder="addrPlaceholder" aria-describedby="addrHelp"/>
+    <div id="addrHelp" class="sr-only">Optional. Used to customize local resources.</div>
+    <button class="btn" id="useAddr" data-i18n="useAddress" aria-controls="gmap">Use Address</button>
+    <button class="btn secondary" id="skipAddr" data-i18n="skip">Skip</button>
+  </div>
+
+  <!-- Renter flag -->
+  <div class="renter" role="group" aria-labelledby="rentQ">
+    <input type="checkbox" id="isRenter" aria-describedby="rentHint" />
+    <label for="isRenter" id="rentQ" data-i18n="rentQ">Are you currently renting this address?</label>
+    <span class="hint" id="rentHint" data-i18n="rentHint">If checked, we'll adapt future recommendations for renters.</span>
+  </div>
+
+  <div id="gmap" role="img" aria-label="Map preview" style="height:300px;margin-top:12px;border:1px solid var(--border);border-radius:12px;filter:grayscale(1) contrast(1.05);background:var(--surface)"></div>
+
+  
+
+  <div class="section-title"><span data-i18n="focusAsk">What do you want to focus on today?</span> <span class="muted" data-i18n="pickAny">(Pick any)</span></div>
+  <div id="chips" class="chipbar" aria-live="polite"></div>
+
+  <!-- STEP 1: Categories -->
+  <div id="categories" class="grid" role="group" aria-label="Focus areas"></div>
+
+  <!-- Wizard toolbar -->
+  <div class="wizbar" id="wizbar" style="display:none">
+    <button class="btn small" id="expandAll">Expand all</button>
+    <button class="btn small secondary" id="collapseAll">Collapse all</button>
+  </div>
+
+  <!-- STEP 2: Wizard (3 levels, no 'select strategy' toggles) -->
+  <div id="wizard" class="accordion" style="display:none" aria-label="Strategies and actions"></div>
+<div id="finalCta" style="display:none; margin: 12px 0 10px; text-align:center;">
+  <button id="genReport" class="btn" style="font-weight:800; padding:14px 18px;" onclick="try{generateReport();document.getElementById('report').scrollIntoView({behavior:'smooth',block:'start'});}catch(e){console.error(e);}">Generate Report</button>
+  <div class="muted" style="margin-top:6px; font-size:13px;">We’ll include everything you selected above.</div>
+</div>
+
+
+  <!-- STEP 3: Report -->
+  <div id="report" class="report" style="display:none" aria-live="polite">
+    <h2 class="section-title" data-i18n="reportTitle">Your Resource Report</h2>
+    <div class="panel" id="emergencyPanel">
+      <h3 data-i18n="panelEmergency">Emergency Contacts & Alerts</h3>
+      <div class="content list" id="emergencyList"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Selected items</h3>
+      <div class="content list" id="selectedList"></div>
+    </div>
+
+    <div class="panel" id="emergencyPanel">
+      <h3 data-i18n="panelEmergency">Emergency Contacts & Alerts</h3>
+      <div class="content list" id="emergencyList"></div>
+    </div>
+
+    <div class="panel" id="assistPanel">
+      <h3 data-i18n="panelAssist">Find Assistance</h3>
+      <div class="content list" id="assistList"></div>
+    </div>
+
+    <div class="panel" id="contractPanel">
+      <h3 data-i18n="panelContractors">Find Contractors</h3>
+      <div class="content list" id="contractList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="sticky-footer" id="footerCtas" style="display:none">
+<button class="footer-cta primary" data-i18n="downloadPdf">Download Report (PDF)</button>
+  <button class="footer-cta" data-i18n="findContractors">Find Contractors</button>
+  <button class="footer-cta" data-i18n="findAssistance">Find Assistance</button>
+  <a class="footer-cta" id="ctaSelfAssess" href="https://www.skyoakstone.com/homesafe-resilience-advisor" target="_blank" rel="noopener" data-i18n="selfAssessCta">10‑minute self‑assessment</a>
+  <a class="footer-cta" id="ctaProAssess" href="https://firebrandcollective.org/assessments/" target="_blank" rel="noopener" data-i18n="proAssessCta">Professional home assessment</a>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+const DATA = {"CATEGORIES": [{"id": "cat_plan-for-wildfire", "icon": "🔥", "title_en": "Plan for Wildfire", "title_es": "Planifique for incendios forestales", "desc_en": "", "desc_es": ""}, {"id": "cat_harden-your-home", "icon": "🏠", "title_en": "Harden Your Home", "title_es": "Refuerce Your hogar", "desc_en": "", "desc_es": ""}, {"id": "cat_create-defensible-space-on-your-property", "icon": "🌿", "title_en": "Create Defensible Space on Your Property", "title_es": "Create espacio defendible on Your Property", "desc_en": "", "desc_es": ""}, {"id": "cat_adapt-your-land-to-fire", "icon": "🔥", "title_en": "Adapt Your Land to Fire", "title_es": "Adapte Your terreno to fuego", "desc_en": "", "desc_es": ""}, {"id": "cat_prepare-with-neighbors", "icon": "🧑‍🤝‍🧑", "title_en": "Prepare with Neighbors", "title_es": "Prepárese with vecinos", "desc_en": "", "desc_es": ""}, {"id": "cat_prepare-for-smoke", "icon": "🌫️", "title_en": "Prepare for Smoke", "title_es": "Prepárese for humo", "desc_en": "", "desc_es": ""}], "STRATEGIES": {"cat_plan-for-wildfire": [{"id": "strat_plan-for-wildfire_get-apps-alerts", "title_en": "Get Apps & Alerts", "title_es": "Get aplicaciones & alertas", "icon": "📲"}, {"id": "strat_plan-for-wildfire_pack-your-go-bag", "title_en": "Pack Your Go-Bag", "title_es": "Pack Your bolsa de evacuación", "icon": "🎒"}, {"id": "strat_plan-for-wildfire_evacuate-safely", "title_en": "Evacuate Safely", "title_es": "Evacuate Safely", "icon": "🎒"}, {"id": "strat_plan-for-wildfire_protect-your-belongings", "title_en": "Protect Your Belongings", "title_es": "Protect Your Belongings", "icon": "•"}, {"id": "strat_plan-for-wildfire_backup-your-power-water", "title_en": "Backup Your Power & Water", "title_es": "Backup Your Power & agua", "icon": "💧"}], "cat_harden-your-home": [{"id": "strat_harden-your-home_make-your-home-ember-resistent", "title_en": "Make Your Home Ember-resistent", "title_es": "Make Your hogar Ember-resistent", "icon": "🔥"}, {"id": "strat_harden-your-home_maintain-your-home", "title_en": "Maintain Your Home", "title_es": "Maintain Your hogar", "icon": "🏠"}, {"id": "strat_harden-your-home_firesafe-landscaping", "title_en": "Firesafe Landscaping", "title_es": "Fuegosafe terrenoscaping", "icon": "🔥"}, {"id": "strat_harden-your-home_assess-your-home-for-wildfire-risk", "title_en": "Assess Your Home for Wildfire Risk", "title_es": "Assess Your hogar for incendios forestales Risk", "icon": "🔥"}], "cat_create-defensible-space-on-your-property": [{"id": "strat_create-defensible-space-on-your-property_immediate-zone-0-5-ft", "title_en": "Immediate Zone: 0-5 ft", "title_es": "Immediate Zone: 0-5 ft", "icon": "🗺️"}, {"id": "strat_create-defensible-space-on-your-property_intermediate-zone-5-30-ft", "title_en": "Intermediate Zone: 5-30 ft", "title_es": "Intermediate Zone: 5-30 ft", "icon": "🗺️"}, {"id": "strat_create-defensible-space-on-your-property_extended-zone-30100-ft", "title_en": "Extended Zone : 30–100+ ft", "title_es": "Extended Zone : 30–100+ ft", "icon": "🗺️"}, {"id": "strat_create-defensible-space-on-your-property_maintain-defensible-space", "title_en": "Maintain Defensible Space", "title_es": "Maintain espacio defendible", "icon": "🌿"}, {"id": "strat_create-defensible-space-on-your-property_assess-your-property-for-risk", "title_en": "Assess Your Property for Risk", "title_es": "Assess Your Property for Risk", "icon": "•"}], "cat_adapt-your-land-to-fire": [{"id": "strat_adapt-your-land-to-fire_reduce-fuels-in-your-forest", "title_en": "Reduce Fuels in Your Forest", "title_es": "Reduce Fuels in Your Forest", "icon": "🌿"}, {"id": "strat_adapt-your-land-to-fire_manage-your-forest", "title_en": "Manage Your Forest", "title_es": "Manage Your Forest", "icon": "•"}, {"id": "strat_adapt-your-land-to-fire_move-some-earth", "title_en": "Move Some Earth", "title_es": "Move Some Earth", "icon": "•"}], "cat_prepare-with-neighbors": [{"id": "strat_prepare-with-neighbors_go-firewise", "title_en": "Go Firewise!", "title_es": "Go fuegowise!", "icon": "🔥"}, {"id": "strat_prepare-with-neighbors_community-emergency-wildfire-planning", "title_en": "Community Emergency & Wildfire Planning", "title_es": "Comunidad Emergency & incendios forestales planifiquening", "icon": "🔥"}, {"id": "strat_prepare-with-neighbors_find-ways-to-volunteer", "title_en": "Find Ways to Volunteer", "title_es": "", "icon": "•"}], "cat_prepare-for-smoke": [{"id": "strat_prepare-for-smoke_monitor-air-quality", "title_en": "Monitor Air Quality", "title_es": "", "icon": "😷"}, {"id": "strat_prepare-for-smoke_protect-your-health", "title_en": "Protect Your Health", "title_es": "", "icon": "•"}, {"id": "strat_prepare-for-smoke_improve-air-quality-at-home", "title_en": "Improve Air Quality at Home", "title_es": "", "icon": "🏠"}, {"id": "strat_prepare-for-smoke_prepare-your-business", "title_en": "Prepare Your Business", "title_es": "", "icon": "•"}, {"id": "strat_prepare-for-smoke_smoke-free-travel", "title_en": "Smoke-Free Travel", "title_es": "", "icon": "🌫️"}]}, "ACTIONS": {"strat_plan-for-wildfire_get-apps-alerts": [{"id": "act_plan-for-wildfire_get-apps-alerts_local-emergency-alerts", "label_en": "Local Emergency Alerts", "label_es": "", "blurb_en": "Sign up for official local emergency alerts and enable phone/email/app notifications so warnings reach you fast.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_get-apps-alerts_recommended-apps", "label_en": "Recommended Apps", "label_es": "", "blurb_en": "Install trusted wildfire and air‑quality apps. Turn on location sharing and alerts for your area.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_get-apps-alerts_phone-trees", "label_en": "Phone Trees", "label_es": "", "blurb_en": "Create a simple phone tree with neighbors so one call turns into many. Print it and share a copy.", "blurb_es": ""}], "strat_plan-for-wildfire_pack-your-go-bag": [{"id": "act_plan-for-wildfire_pack-your-go-bag_what-to-pack", "label_en": "What To Pack", "label_es": "", "blurb_en": "Assemble a 72‑hour go‑bag with water, meds, chargers, and copies of IDs. Keep it by the door.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_pack-your-go-bag_evacuation-checklists", "label_en": "Evacuation Checklists", "label_es": "", "blurb_en": "Use an evacuation checklist for a calm, fast departure. Post it on the fridge or by the exit.", "blurb_es": ""}], "strat_plan-for-wildfire_evacuate-safely": [{"id": "act_plan-for-wildfire_evacuate-safely_ready-set-go", "label_en": "Ready, Set, Go!", "label_es": "", "blurb_en": "Choose this action to advance “Evacuate Safely” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_evacuate-safely_mapping-your-route", "label_en": "Mapping Your Route", "label_es": "", "blurb_en": "Install trusted wildfire and air‑quality apps. Turn on location sharing and alerts for your area.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_evacuate-safely_safe-entry-exit", "label_en": "Safe Entry & Exit", "label_es": "", "blurb_en": "Choose this action to advance “Evacuate Safely” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_evacuate-safely_setting-a-reunification-point", "label_en": "Setting a Reunification Point", "label_es": "", "blurb_en": "Choose this action to advance “Evacuate Safely” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_evacuate-safely_red-flag-warnings", "label_en": "Red Flag Warnings", "label_es": "", "blurb_en": "Choose this action to advance “Evacuate Safely” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_evacuate-safely_shutting-off-utilities", "label_en": "Shutting Off Utilities", "label_es": "", "blurb_en": "Choose this action to advance “Evacuate Safely” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_evacuate-safely_plan-for-pets", "label_en": "Plan for Pets", "label_es": "", "blurb_en": "Include pets/livestock in your plan: carriers, feed, and a safe destination noted ahead of time.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_evacuate-safely_plan-for-livestock", "label_en": "Plan for Livestock", "label_es": "", "blurb_en": "Include pets/livestock in your plan: carriers, feed, and a safe destination noted ahead of time.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_evacuate-safely_community-connect", "label_en": "Community Connect ©", "label_es": "", "blurb_en": "Choose this action to advance “Evacuate Safely” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_evacuate-safely_evacuating-with-disability", "label_en": "Evacuating with Disability", "label_es": "", "blurb_en": "Choose this action to advance “Evacuate Safely” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_evacuate-safely_emergency-shelters", "label_en": "Emergency Shelters", "label_es": "", "blurb_en": "Choose this action to advance “Evacuate Safely” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_evacuate-safely_sheltering-in-place", "label_en": "Sheltering in Place", "label_es": "", "blurb_en": "Choose this action to advance “Evacuate Safely” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_plan-for-wildfire_protect-your-belongings": [{"id": "act_plan-for-wildfire_protect-your-belongings_reviewing-your-insurance-policy", "label_en": "Reviewing Your Insurance Policy", "label_es": "", "blurb_en": "Review insurance coverage and make a quick photo/video home inventory to speed claims after a loss.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_protect-your-belongings_documenting-your-belongings", "label_en": "Documenting Your Belongings", "label_es": "", "blurb_en": "Choose this action to advance “Protect Your Belongings” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_protect-your-belongings_safeguarding-critical-information", "label_en": "Safeguarding Critical Information", "label_es": "", "blurb_en": "Choose this action to advance “Protect Your Belongings” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_protect-your-belongings_renters-insurance", "label_en": "Renter’s Insurance", "label_es": "", "blurb_en": "Review insurance coverage and make a quick photo/video home inventory to speed claims after a loss.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_protect-your-belongings_understand-renter/landlord-responsibilities", "label_en": "Understand Renter/Landlord Responsibilities", "label_es": "", "blurb_en": "Choose this action to advance “Protect Your Belongings” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_plan-for-wildfire_backup-your-power-water": [{"id": "act_plan-for-wildfire_backup-your-power-water_keep-water-flowing", "label_en": "Keep Water Flowing", "label_es": "", "blurb_en": "Confirm usable water: tanks/hydrants marked, hoses reach all sides of structures, and fittings are standard.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_backup-your-power-water_keep-the-power-on", "label_en": "Keep the Power On", "label_es": "", "blurb_en": "Prepare backup power for pumps/communications and store fuel safely; test it under load once a season.", "blurb_es": ""}, {"id": "act_plan-for-wildfire_backup-your-power-water_store-your-fuel-safely", "label_en": "Store Your Fuel Safely", "label_es": "", "blurb_en": "Choose this action to advance “Backup Your Power & Water” in “Plan for Wildfire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_harden-your-home_make-your-home-ember-resistent": [{"id": "act_harden-your-home_make-your-home-ember-resistent_roofs-gutters", "label_en": "Roofs & Gutters", "label_es": "", "blurb_en": "Upgrade to a Class‑A fire‑rated roof or repair gaps. This is one of the biggest risk reducers for embers.", "blurb_es": ""}, {"id": "act_harden-your-home_make-your-home-ember-resistent_eaves-soffits", "label_en": "Eaves & Soffits", "label_es": "", "blurb_en": "Choose this action to advance “Make Your Home Ember-resistent” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_make-your-home-ember-resistent_siding", "label_en": "Siding", "label_es": "", "blurb_en": "Choose this action to advance “Make Your Home Ember-resistent” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_make-your-home-ember-resistent_doors-windows", "label_en": "Doors & Windows", "label_es": "", "blurb_en": "Choose this action to advance “Make Your Home Ember-resistent” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_make-your-home-ember-resistent_vents-screens", "label_en": "Vents & Screens", "label_es": "", "blurb_en": "Install ember‑resistant vents (1/16\" metal mesh) to block sparks from entering attic and crawlspace.", "blurb_es": ""}, {"id": "act_harden-your-home_make-your-home-ember-resistent_decks-fences-attachments", "label_en": "Decks, Fences & Attachments", "label_es": "", "blurb_en": "Choose this action to advance “Make Your Home Ember-resistent” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_make-your-home-ember-resistent_5-foot-fuel-free-zone", "label_en": "5 foot fuel-free zone", "label_es": "", "blurb_en": "Choose this action to advance “Make Your Home Ember-resistent” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_make-your-home-ember-resistent_wildfire-prepared-home-certification", "label_en": "Wildfire Prepared Home © Certification", "label_es": "", "blurb_en": "Choose this action to advance “Make Your Home Ember-resistent” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_harden-your-home_maintain-your-home": [{"id": "act_harden-your-home_maintain-your-home_roof-maintenaince", "label_en": "Roof Maintenaince", "label_es": "", "blurb_en": "Upgrade to a Class‑A fire‑rated roof or repair gaps. This is one of the biggest risk reducers for embers.", "blurb_es": ""}, {"id": "act_harden-your-home_maintain-your-home_gutter-maintenance", "label_en": "Gutter Maintenance", "label_es": "", "blurb_en": "Keep gutters clear of leaves/needles and consider metal guards so embers have nothing to land on.", "blurb_es": ""}, {"id": "act_harden-your-home_maintain-your-home_removing-combustible-material", "label_en": "Removing Combustible Material", "label_es": "", "blurb_en": "Choose this action to advance “Maintain Your Home” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_maintain-your-home_sealing-windows-doors", "label_en": "Sealing Windows & Doors", "label_es": "", "blurb_en": "Choose this action to advance “Maintain Your Home” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_harden-your-home_firesafe-landscaping": [{"id": "act_harden-your-home_firesafe-landscaping_the-5-foot-fuel-free-zone", "label_en": "The 5 foot fuel-free zone", "label_es": "", "blurb_en": "Choose this action to advance “Firesafe Landscaping” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_firesafe-landscaping_groundcover", "label_en": "Groundcover", "label_es": "", "blurb_en": "Choose this action to advance “Firesafe Landscaping” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_firesafe-landscaping_hardscaping", "label_en": "Hardscaping", "label_es": "", "blurb_en": "Choose this action to advance “Firesafe Landscaping” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_firesafe-landscaping_fire-resistant-plants", "label_en": "Fire-Resistant Plants", "label_es": "", "blurb_en": "Choose this action to advance “Firesafe Landscaping” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_firesafe-landscaping_pruning-removing-trees-large-shrubs/vines", "label_en": "Pruning & Removing Trees, Large Shrubs/Vines", "label_es": "", "blurb_en": "Choose this action to advance “Firesafe Landscaping” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_firesafe-landscaping_wildfire-prepared-home", "label_en": "Wildfire Prepared Home ©", "label_es": "", "blurb_en": "Choose this action to advance “Firesafe Landscaping” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_harden-your-home_assess-your-home-for-wildfire-risk": [{"id": "act_harden-your-home_assess-your-home-for-wildfire-risk_what-is-a-home-assessment", "label_en": "What is a Home Assessment", "label_es": "", "blurb_en": "Choose this action to advance “Assess Your Home for Wildfire Risk” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_harden-your-home_assess-your-home-for-wildfire-risk_10-minute-assessment", "label_en": "10-Minute  Assessment", "label_es": "", "blurb_en": "Choose this action to advance “Assess Your Home for Wildfire Risk” in “Harden Your Home.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_create-defensible-space-on-your-property_immediate-zone-0-5-ft": [{"id": "act_create-defensible-space-on-your-property_immediate-zone-0-5-ft_5-foot-fuel-free-zone", "label_en": "5 foot fuel-free zone", "label_es": "", "blurb_en": "Choose this action to advance “Immediate Zone: 0-5 ft” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_immediate-zone-0-5-ft_hardscaping", "label_en": "Hardscaping", "label_es": "", "blurb_en": "Choose this action to advance “Immediate Zone: 0-5 ft” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_immediate-zone-0-5-ft_remove-trees-shrubs-vines", "label_en": "Remove Trees, Shrubs & Vines", "label_es": "", "blurb_en": "Choose this action to advance “Immediate Zone: 0-5 ft” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_immediate-zone-0-5-ft_decks-fences-attachments", "label_en": "Decks, Fences & Attachments", "label_es": "", "blurb_en": "Choose this action to advance “Immediate Zone: 0-5 ft” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_create-defensible-space-on-your-property_intermediate-zone-5-30-ft": [{"id": "act_create-defensible-space-on-your-property_intermediate-zone-5-30-ft_fire-resistant-plants", "label_en": "Fire-Resistant Plants", "label_es": "", "blurb_en": "Choose this action to advance “Intermediate Zone: 5-30 ft” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_intermediate-zone-5-30-ft_trees-shrubs", "label_en": "Trees & Shrubs", "label_es": "", "blurb_en": "Choose this action to advance “Intermediate Zone: 5-30 ft” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_intermediate-zone-5-30-ft_irrigating-planted-areas", "label_en": "Irrigating Planted Areas", "label_es": "", "blurb_en": "Choose this action to advance “Intermediate Zone: 5-30 ft” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_intermediate-zone-5-30-ft_ladder-fuels-dead-vegetation", "label_en": "Ladder fuels & Dead Vegetation", "label_es": "", "blurb_en": "Reduce fuels near structures: trim branches, remove ladder fuels, and clear leaves within 5–30 feet.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_intermediate-zone-5-30-ft_plant-spacing", "label_en": "Plant Spacing", "label_es": "", "blurb_en": "Choose this action to advance “Intermediate Zone: 5-30 ft” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_intermediate-zone-5-30-ft_slopes", "label_en": "Slopes", "label_es": "", "blurb_en": "Choose this action to advance “Intermediate Zone: 5-30 ft” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_create-defensible-space-on-your-property_extended-zone-30100-ft": [{"id": "act_create-defensible-space-on-your-property_extended-zone-30100-ft_ladder-fuels-dead-vegetation", "label_en": "Ladder fuels & Dead Vegetation", "label_es": "", "blurb_en": "Reduce fuels near structures: trim branches, remove ladder fuels, and clear leaves within 5–30 feet.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_extended-zone-30100-ft_canopy-spacing", "label_en": "Canopy spacing", "label_es": "", "blurb_en": "Choose this action to advance “Extended Zone : 30–100+ ft” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_extended-zone-30100-ft_slopes", "label_en": "Slopes", "label_es": "", "blurb_en": "Choose this action to advance “Extended Zone : 30–100+ ft” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_create-defensible-space-on-your-property_maintain-defensible-space": [{"id": "act_create-defensible-space-on-your-property_maintain-defensible-space_lawns", "label_en": "Lawns", "label_es": "", "blurb_en": "Choose this action to advance “Maintain Defensible Space” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_maintain-defensible-space_ladder-fuels", "label_en": "Ladder Fuels", "label_es": "", "blurb_en": "Reduce fuels near structures: trim branches, remove ladder fuels, and clear leaves within 5–30 feet.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_maintain-defensible-space_seasonal-cleanup", "label_en": "Seasonal Cleanup", "label_es": "", "blurb_en": "Choose this action to advance “Maintain Defensible Space” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_create-defensible-space-on-your-property_assess-your-property-for-risk": [{"id": "act_create-defensible-space-on-your-property_assess-your-property-for-risk_what-is-a-home-assessment", "label_en": "What is a Home Assessment", "label_es": "", "blurb_en": "Choose this action to advance “Assess Your Property for Risk” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_create-defensible-space-on-your-property_assess-your-property-for-risk_10-minute-assessment", "label_en": "10-Minute  Assessment", "label_es": "", "blurb_en": "Choose this action to advance “Assess Your Property for Risk” in “Create Defensible Space on Your Property.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_adapt-your-land-to-fire_reduce-fuels-in-your-forest": [{"id": "act_adapt-your-land-to-fire_reduce-fuels-in-your-forest_treating-ladder-fuels", "label_en": "Treating Ladder Fuels", "label_es": "", "blurb_en": "Reduce fuels near structures: trim branches, remove ladder fuels, and clear leaves within 5–30 feet.", "blurb_es": ""}, {"id": "act_adapt-your-land-to-fire_reduce-fuels-in-your-forest_treating-surface-fuel", "label_en": "Treating Surface Fuel", "label_es": "", "blurb_en": "Choose this action to advance “Reduce Fuels in Your Forest” in “Adapt Your Land to Fire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_adapt-your-land-to-fire_reduce-fuels-in-your-forest_pile-burning", "label_en": "Pile Burning", "label_es": "", "blurb_en": "Choose this action to advance “Reduce Fuels in Your Forest” in “Adapt Your Land to Fire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_adapt-your-land-to-fire_reduce-fuels-in-your-forest_using-prescribed-fire", "label_en": "Using Prescribed Fire", "label_es": "", "blurb_en": "Choose this action to advance “Reduce Fuels in Your Forest” in “Adapt Your Land to Fire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_adapt-your-land-to-fire_manage-your-forest": [{"id": "act_adapt-your-land-to-fire_manage-your-forest_forest-management-plans", "label_en": "Forest Management Plans", "label_es": "", "blurb_en": "Choose this action to advance “Manage Your Forest” in “Adapt Your Land to Fire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_adapt-your-land-to-fire_manage-your-forest_small-fuel-breaks", "label_en": "Small Fuel Breaks", "label_es": "", "blurb_en": "Choose this action to advance “Manage Your Forest” in “Adapt Your Land to Fire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_adapt-your-land-to-fire_manage-your-forest_using-prescribed-fire", "label_en": "Using Prescribed Fire", "label_es": "", "blurb_en": "Choose this action to advance “Manage Your Forest” in “Adapt Your Land to Fire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_adapt-your-land-to-fire_manage-your-forest_sustainable-timber-harvest", "label_en": "Sustainable Timber Harvest", "label_es": "", "blurb_en": "Choose this action to advance “Manage Your Forest” in “Adapt Your Land to Fire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_adapt-your-land-to-fire_manage-your-forest_forest-mortality", "label_en": "Forest Mortality", "label_es": "", "blurb_en": "Choose this action to advance “Manage Your Forest” in “Adapt Your Land to Fire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_adapt-your-land-to-fire_manage-your-forest_restoring-riparian-areas", "label_en": "Restoring Riparian Areas", "label_es": "", "blurb_en": "Choose this action to advance “Manage Your Forest” in “Adapt Your Land to Fire.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_adapt-your-land-to-fire_manage-your-forest_preventing-erosion", "label_en": "Preventing Erosion", "label_es": "", "blurb_en": "Install ember‑resistant vents (1/16\" metal mesh) to block sparks from entering attic and crawlspace.", "blurb_es": ""}], "strat_adapt-your-land-to-fire_move-some-earth": [{"id": "act_adapt-your-land-to-fire_move-some-earth_preventing-erosion", "label_en": "Preventing Erosion", "label_es": "", "blurb_en": "Install ember‑resistant vents (1/16\" metal mesh) to block sparks from entering attic and crawlspace.", "blurb_es": ""}, {"id": "act_adapt-your-land-to-fire_move-some-earth_access-roads", "label_en": "Access Roads", "label_es": "", "blurb_en": "Maintain 12‑14 ft vertical and 12 ft horizontal clearance on driveways; mark gates and share gate codes.", "blurb_es": ""}], "strat_prepare-with-neighbors_go-firewise": [{"id": "act_prepare-with-neighbors_go-firewise_what-is-a-firewise-community", "label_en": "What is a Firewise Community?", "label_es": "", "blurb_en": "Choose this action to advance “Go Firewise!” in “Prepare with Neighbors.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_prepare-with-neighbors_go-firewise_steps-to-firewise", "label_en": "Steps to Firewise", "label_es": "", "blurb_en": "Choose this action to advance “Go Firewise!” in “Prepare with Neighbors.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_prepare-with-neighbors_go-firewise_case-studies", "label_en": "Case Studies", "label_es": "", "blurb_en": "Choose this action to advance “Go Firewise!” in “Prepare with Neighbors.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_prepare-with-neighbors_community-emergency-wildfire-planning": [{"id": "act_prepare-with-neighbors_community-emergency-wildfire-planning_phone-trees", "label_en": "Phone Trees", "label_es": "", "blurb_en": "Create a simple phone tree with neighbors so one call turns into many. Print it and share a copy.", "blurb_es": ""}, {"id": "act_prepare-with-neighbors_community-emergency-wildfire-planning_evacuation-drills", "label_en": "Evacuation Drills", "label_es": "", "blurb_en": "Choose this action to advance “Community Emergency & Wildfire Planning” in “Prepare with Neighbors.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_prepare-with-neighbors_community-emergency-wildfire-planning_mapping-risks-resources", "label_en": "Mapping Risks & Resources", "label_es": "", "blurb_en": "Install trusted wildfire and air‑quality apps. Turn on location sharing and alerts for your area.", "blurb_es": ""}, {"id": "act_prepare-with-neighbors_community-emergency-wildfire-planning_community-liaisons-programs", "label_en": "Community Liaisons Programs", "label_es": "", "blurb_en": "Choose this action to advance “Community Emergency & Wildfire Planning” in “Prepare with Neighbors.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_prepare-with-neighbors_find-ways-to-volunteer": [{"id": "act_prepare-with-neighbors_find-ways-to-volunteer_local-volunteer-opportunities", "label_en": "Local Volunteer Opportunities", "label_es": "", "blurb_en": "Choose this action to advance “Find Ways to Volunteer” in “Prepare with Neighbors.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_prepare-with-neighbors_find-ways-to-volunteer_firewise-cleanup-days", "label_en": "Firewise Cleanup Days", "label_es": "", "blurb_en": "Choose this action to advance “Find Ways to Volunteer” in “Prepare with Neighbors.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_prepare-with-neighbors_find-ways-to-volunteer_training-opportunities", "label_en": "Training Opportunities", "label_es": "", "blurb_en": "Choose this action to advance “Find Ways to Volunteer” in “Prepare with Neighbors.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_prepare-for-smoke_monitor-air-quality": [{"id": "act_prepare-for-smoke_monitor-air-quality_aqi-apps-alerts", "label_en": "AQI Apps & Alerts", "label_es": "", "blurb_en": "Sign up for official local emergency alerts and enable phone/email/app notifications so warnings reach you fast.", "blurb_es": ""}, {"id": "act_prepare-for-smoke_monitor-air-quality_installing-an-air-sensor", "label_en": "Installing an Air Sensor", "label_es": "", "blurb_en": "Choose this action to advance “Monitor Air Quality” in “Prepare for Smoke.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_prepare-for-smoke_protect-your-health": [{"id": "act_prepare-for-smoke_protect-your-health_ppe/face-masks", "label_en": "PPE/Face Masks", "label_es": "", "blurb_en": "Set up a clean‑air room with a HEPA purifier and keep N95 masks on hand for smoke days.", "blurb_es": ""}, {"id": "act_prepare-for-smoke_protect-your-health_sensitive-groups", "label_en": "Sensitive groups", "label_es": "", "blurb_en": "Choose this action to advance “Protect Your Health” in “Prepare for Smoke.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_prepare-for-smoke_improve-air-quality-at-home": [{"id": "act_prepare-for-smoke_improve-air-quality-at-home_home-air-filters/hvac", "label_en": "Home Air Filters/HVAC", "label_es": "", "blurb_en": "Set up a clean‑air room with a HEPA purifier and keep N95 masks on hand for smoke days.", "blurb_es": ""}, {"id": "act_prepare-for-smoke_improve-air-quality-at-home_portable-air-purifiers", "label_en": "Portable Air Purifiers", "label_es": "", "blurb_en": "Set up a clean‑air room with a HEPA purifier and keep N95 masks on hand for smoke days.", "blurb_es": ""}, {"id": "act_prepare-for-smoke_improve-air-quality-at-home_seal-windows-doors", "label_en": "Seal Windows & Doors", "label_es": "", "blurb_en": "Choose this action to advance “Improve Air Quality at Home” in “Prepare for Smoke.” It reduces risk and gives you a clear first step.", "blurb_es": ""}], "strat_prepare-for-smoke_prepare-your-business": [{"id": "act_prepare-for-smoke_prepare-your-business_protecting-workers", "label_en": "Protecting Workers", "label_es": "", "blurb_en": "Choose this action to advance “Prepare Your Business” in “Prepare for Smoke.” It reduces risk and gives you a clear first step.", "blurb_es": ""}, {"id": "act_prepare-for-smoke_prepare-your-business_making-a-smoke-plan", "label_en": "Making a Smoke Plan", "label_es": "", "blurb_en": "Set up a clean‑air room with a HEPA purifier and keep N95 masks on hand for smoke days.", "blurb_es": ""}], "strat_prepare-for-smoke_smoke-free-travel": [{"id": "act_prepare-for-smoke_smoke-free-travel_vehicle-air-filters", "label_en": "Vehicle Air Filters", "label_es": "", "blurb_en": "Set up a clean‑air room with a HEPA purifier and keep N95 masks on hand for smoke days.", "blurb_es": ""}, {"id": "act_prepare-for-smoke_smoke-free-travel_portable-cabin-filters", "label_en": "Portable Cabin filters", "label_es": "", "blurb_en": "Set up a clean‑air room with a HEPA purifier and keep N95 masks on hand for smoke days.", "blurb_es": ""}, {"id": "act_prepare-for-smoke_smoke-free-travel_ppe/face-masks", "label_en": "PPE/Face Masks", "label_es": "", "blurb_en": "Set up a clean‑air room with a HEPA purifier and keep N95 masks on hand for smoke days.", "blurb_es": ""}, {"id": "act_prepare-for-smoke_smoke-free-travel_smoke-free-kids-activitiews", "label_en": "Smoke-free Kids Activitiews", "label_es": "", "blurb_en": "Set up a clean‑air room with a HEPA purifier and keep N95 masks on hand for smoke days.", "blurb_es": ""}]}};
+
+const I18N = {
+  en: {
+    brand: "Ember Raven – Your Personal Resource Navigator",
+    howItWorks: "How it works",
+    about: "About",
+    heroTitle: "Plan for Wildfire - Protect What Matters",
+    heroSub: "Pick what you want to work on; we’ll tailor readiness knowledge, assistance, and local resources to your location.",
+    addrPlaceholder: "Enter address (optional)",
+    useAddress: "Use Address",
+    skip: "Skip",
+    focusAsk: "What do you want to focus on today?",
+    pickAny: "(Pick any)",
+    actions: "actions",
+    reportTitle: "Your Resource Report",
+    panelEmergency: "Emergency Contacts & Alerts",
+    panelAssist: "Find Assistance",
+    panelContractors: "Find Contractors",
+    downloadPdf: "Download Report (PDF)",
+    findContractors: "Find Contractors",
+    findAssistance: "Find Assistance",
+    basedOn: (titles) => `Based on your focus: ${titles}`,
+    navFindContractors: "Find Contractors",
+    navFindResources: "Find Resources",
+    rentQ: "Are you currently renting this address?",
+    rentHint: "If checked, we'll adapt future recommendations for renters.",
+    renterChip: "Renter",
+    itemsSelected: (n) => `${n} selected`
+  ,
+panelExpand: "Expand your plan",
+    selfAssessTitle: "Complete your plan: 10‑minute self‑assessment",
+    selfAssessDesc: "Answer a few questions to generate a prioritized checklist.",
+    proAssessTitle: "Book a free in‑person assessment (Firebrand)",
+    proAssessDesc: "Schedule a visit with a trained assessor to walk your site and get tailored guidance."
+,
+selfAssessCta: "10‑minute self‑assessment",
+    proAssessCta: "Professional home assessment"
+},
+  es: {
+    brand: "Ember Raven – Su Navegador Personal de Recursos",
+    howItWorks: "Cómo funciona",
+    about: "Acerca de",
+    heroTitle: "Planifique para Incendios Forestales - Proteja lo que importa",
+    heroSub: "Elija en qué quiere trabajar; adaptaremos el conocimiento, la asistencia y los recursos locales a su ubicación.",
+    addrPlaceholder: "Ingrese la dirección (opcional)",
+    useAddress: "Usar dirección",
+    skip: "Saltar",
+    focusAsk: "¿En qué quiere enfocarse hoy?",
+    pickAny: "(Elija cualquiera)",
+    actions: "acciones",
+    reportTitle: "Su Informe de Recursos",
+    panelEmergency: "Contactos y Alertas de Emergencia",
+    panelAssist: "Buscar Asistencia",
+    panelContractors: "Buscar Contratistas",
+    downloadPdf: "Descargar informe (PDF)",
+    findContractors: "Buscar Contratistas",
+    findAssistance: "Buscar Asistencia",
+    basedOn: (titles) => `Según su enfoque: ${titles}`,
+    navFindContractors: "Buscar Contratistas",
+    navFindResources: "Buscar Recursos",
+    rentQ: "¿Actualmente alquila esta dirección?",
+    rentHint: "Si está marcado, adaptaremos recomendaciones futuras para inquilinos.",
+    renterChip: "Inquilino",
+    itemsSelected: (n) => `${n} seleccionados`
+  ,
+panelExpand: "Amplíe su plan",
+    selfAssessTitle: "Complete su plan: autoevaluación de 10 minutos",
+    selfAssessDesc: "Responda unas preguntas para generar una lista priorizada.",
+    proAssessTitle: "Reserve una evaluación presencial gratuita (Firebrand)",
+    proAssessDesc: "Programe una visita con un asesor para recibir orientación en su sitio."
+,
+selfAssessCta: "Autoevaluación de 10 minutos",
+    proAssessCta: "Evaluación profesional del hogar"
+}
+};
+let LANG = (localStorage.getItem("emberraven_lang") || "en");
+function t(key){ const pack = I18N[LANG] || I18N.en; const val = pack[key]; return (typeof val === "string") ? val : (I18N.en[key] || key); }
+function tFn(key, ...args){ const pack = I18N[LANG] || I18N.en; const fn = pack[key] || I18N.en[key]; try{ return fn(...args); }catch(e){ return ""; } }
+function applyI18n(){
+  document.querySelectorAll("[data-i18n]").forEach(el=> el.textContent = t(el.getAttribute("data-i18n")));
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=> el.setAttribute("placeholder", t(el.getAttribute("data-i18n-placeholder"))));
+  document.getElementById("lang-en").setAttribute("aria-pressed", LANG==="en" ? "true":"false");
+  document.getElementById("lang-es").setAttribute("aria-pressed", LANG==="es" ? "true":"false");
+  document.getElementById("navFindContractors").textContent = t("navFindContractors");
+  document.getElementById("navFindResources").textContent = t("navFindResources");
+  document.getElementById("rentQ").textContent = t("rentQ");
+  document.getElementById("rentHint").textContent = t("rentHint");
+}
+
+// Helpers
+function labelFor(obj, enKey, esKey){ const es=(obj[esKey]||"").trim(); const en=(obj[enKey]||"").trim(); return (LANG==="es" && es) ? es : en; }
+function blurbFor(obj){ const es=(obj["blurb_es"]||"").trim(); const en=(obj["blurb_en"]||"").trim(); return (LANG==="es" && es) ? es : en; }
+
+const CATEGORIES = DATA.CATEGORIES;
+const STRATEGIES = DATA.STRATEGIES;   // by catId -> [{id,title_en,title_es}]
+const ACTIONS = DATA.ACTIONS;         // by stratId -> [{id,label_en,label_es,blurb_en,blurb_es}]
+
+// State
+const state = { address:null, selectedCats:[], actSelections:{}, isRenter:(localStorage.getItem("emberraven_isRenter")==="true") };
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+function showToast(msg){
+  const t = document.getElementById("toast"); t.textContent = msg; t.style.display = "block"; setTimeout(()=> t.style.display="none", 1800);
+}
+
+function renderCategories(){
+  const wrap = $("#categories"); wrap.innerHTML = "";
+  CATEGORIES.forEach(cat=>{
+    const pressed = state.selectedCats.includes(cat.id);
+    const card = document.createElement("button");
+    card.className="card-toggle"; card.type="button"; card.setAttribute("role","button");
+    card.setAttribute("aria-pressed", pressed ? "true":"false"); card.dataset.cat = cat.id;
+    card.innerHTML = `<div class="ico">${cat.icon || "•"}</div>
+      <div><div class="title">${labelFor(cat,"title_en","title_es")}</div>
+      <div class="desc">${labelFor(cat,"desc_en","desc_es")}</div></div>`;
+    card.addEventListener("click", ()=>toggleCategory(cat.id));
+    wrap.appendChild(card);
+  });
+  renderChips();
+}
+
+function countSelectedActionsForCat(catId){
+  const strats = STRATEGIES[catId] || [];
+  let total = 0;
+  strats.forEach(st => { total += (state.actSelections[st.id]?.size || 0); });
+  return total;
+}
+
+function renderChips(){
+  const chipbar = $("#chips");
+  const chips = [];
+  if (state.isRenter){
+    chips.push(`<span class="chip">🔑 ${t("renterChip")}</span>`);
+  }
+  chips.push(...state.selectedCats.map(id=>{
+    const cat = CATEGORIES.find(c=>c.id===id);
+    const title = labelFor(cat, "title_en", "title_es");
+    const countActs = countSelectedActionsForCat(id);
+    const suffix = countActs ? ` • ${tFn("itemsSelected", countActs)}` : "";
+    return `<span class="chip">${cat.icon || "•"} ${title}${suffix}</span>`;
+  }));
+  chipbar.innerHTML = chips.join("");
+  const hasCats = state.selectedCats.length>0;
+  $("#wizard").style.display = hasCats ? "" : "none";
+  $("#finalCta").style.display = hasCats ? "" : "none";
+  $("#wizbar").style.display = hasCats ? "" : "none";
+  }
+
+function toggleCategory(id){
+  const i = state.selectedCats.indexOf(id);
+  if (i>=0) state.selectedCats.splice(i,1); else state.selectedCats.push(id);
+  renderCategories();
+  if (state.selectedCats.length>0){ renderWizard(); }
+}
+
+function renderWizard(){
+  const wiz = $("#wizard"); wiz.innerHTML = "";
+  state.selectedCats.forEach((catId, idx)=>{
+    const cat = CATEGORIES.find(c=>c.id===catId);
+    const open = idx===0 ? "true" : "false";
+    const item = document.createElement("div");
+    item.className="acc-item"; item.dataset.cat = catId; item.setAttribute("data-open", open);
+
+    const strats = STRATEGIES[catId] || [];
+    const stratHtml = strats.map(st => {
+      const acts = ACTIONS[st.id] || [];
+      const countSel = (state.actSelections[st.id]?.size || 0);
+      const actHtml = acts.map(a => {
+        const aPressed = state.actSelections[st.id]?.has(a.id) ? "true":"false";
+        const blurb = blurbFor(a);
+        const blurbText = (typeof blurb === 'string' ? blurb.trim() : '');
+        const safeBlurb = (blurbText && !/^\d+(?:[.,]\d+)?$/.test(blurbText)) ? blurbText : `What this involves and why it matters for “${labelFor(a, "label_en", "label_es")}”.`;
+        return `<button type="button" class="action-toggle" role="button" aria-pressed="${aPressed}" data-act="${a.id}" data-strat="${st.id}">
+          <strong>${labelFor(a, "label_en", "label_es")}</strong><span class='action-blurb'>${safeBlurb}</span>
+        </button>`;
+      }).join("");
+
+      return `<div class="strategy" data-strat="${st.id}" data-open="false">
+        <div class="strategy-head" role="button" tabindex="0" aria-expanded="false">
+          <span class="label">${st.icon || "•"} ${labelFor(st, "title_en", "title_es")}</span>
+          <span class="count">${countSel ? tFn("itemsSelected", countSel) : ""}</span>
+        </div>
+        <div class="strategy-body">
+          <div class="subgrid">${actHtml}</div>
+        </div>
+      </div>`;
+    }).join("");
+
+    item.innerHTML = `
+      <div class="acc-head" role="button" tabindex="0" aria-controls="body-${catId}" aria-expanded="${open}">
+        <span>${cat.icon || "•"} ${labelFor(cat, "title_en", "title_es")}</span>
+        <span>▼</span>
+      </div>
+      <div id="body-${catId}" class="acc-body">
+        ${stratHtml}
+        </div>
+    `;
+    wiz.appendChild(item);
+  });
+
+  $$("#wizard .acc-head").forEach(head=>{
+    const toggle = ()=>{ const item = head.parentElement; const isOpen = item.getAttribute("data-open")==="true"; item.setAttribute("data-open", isOpen?"false":"true"); head.setAttribute("aria-expanded", isOpen?"false":"true"); };
+    head.addEventListener("click", toggle);
+    head.addEventListener("keydown", (e)=>{ if (e.key==="Enter"||e.key===" " ){ e.preventDefault(); toggle(); } });
+  });
+
+  $$("#wizard .strategy-head").forEach(sh=>{
+    const toggle = ()=>{
+      const strategy = sh.closest(".strategy");
+      const isOpen = strategy.getAttribute("data-open")==="true";
+      strategy.setAttribute("data-open", isOpen?"false":"true");
+      sh.setAttribute("aria-expanded", isOpen?"false":"true");
+    };
+    sh.addEventListener("click", toggle);
+    sh.addEventListener("keydown", (e)=>{ if (e.key==="Enter"||e.key===" " ){ e.preventDefault(); toggle(); } });
+  });
+
+  $$("#wizard .action-toggle").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const stratId = btn.getAttribute("data-strat");
+      const actId = btn.getAttribute("data-act");
+      state.actSelections[stratId] ||= new Set();
+      if (btn.getAttribute("aria-pressed")==="true"){
+        btn.setAttribute("aria-pressed","false");
+        state.actSelections[stratId].delete(actId);
+      } else {
+        btn.setAttribute("aria-pressed","true");
+        state.actSelections[stratId].add(actId);
+      }
+      const head = btn.closest(".strategy").querySelector(".strategy-head .count");
+      const newCount = state.actSelections[stratId].size || 0;
+      head.textContent = newCount ? tFn("itemsSelected", newCount) : "";
+      renderChips();
+    });
+  });
+
+  $$("#wizard .acc-actions .btn").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const action = b.dataset.act; const item = b.closest(".acc-item"); const all = $$("#wizard .acc-item"); const idx = all.indexOf(item);
+      if (action==="continue" || action==="skip"){ item.setAttribute("data-open","false"); const next = all[idx+1]; if (next){ next.setAttribute("data-open","true"); next.scrollIntoView({behavior:"smooth",block:"start"}); } else { generateReport(); document.getElementById("report").scrollIntoView({behavior:"smooth",block:"start"}); } }
+      else if (action==="report"){ generateReport(); document.getElementById("report").scrollIntoView({behavior:"smooth",block:"start"}); }
+    });
+  });
+}
+
+document.addEventListener("click", (e)=>{
+  if (e.target && e.target.id==="expandAll"){ $$("#wizard .acc-item").forEach(i=> i.setAttribute("data-open","true")); $$("#wizard .strategy").forEach(i=> i.setAttribute("data-open","true")); $$("#wizard .strategy-head").forEach(sh=> sh.setAttribute("aria-expanded","true")); }
+  if (e.target && e.target.id==="collapseAll"){ $$("#wizard .acc-item").forEach(i=> i.setAttribute("data-open","false")); $$("#wizard .strategy").forEach(i=> i.setAttribute("data-open","false")); $$("#wizard .strategy-head").forEach(sh=> sh.setAttribute("aria-expanded","false")); }
+});
+
+function generateReport(){
+  const cats = [...state.selectedCats];
+  const selected = [];
+  cats.forEach(catId=>{
+    const cat = CATEGORIES.find(c=>c.id===catId);
+    const stratGroups = (STRATEGIES[catId]||[]).map(st =>{
+      const actIds = [...(state.actSelections[st.id]||[])];
+      const acts = (ACTIONS[st.id]||[]).filter(a=> actIds.includes(a.id));
+      return { strategy: st, actions: acts };
+    }).filter(g=> g.actions.length>0);
+    if (stratGroups.length) selected.push({ category: cat, groups: stratGroups });
+  });
+
+  // Populate Emergency panel (placeholder content for now)
+  const $em = document.getElementById("emergencyList");
+  $em.innerHTML = `<div class="item"><strong>Know your emergency responders</strong><div class="muted">911 • County Sheriff • Local Fire District • Alerts & Apps</div></div>`;
+
+  // Populate Selected items
+  const $sel = document.getElementById("selectedList");
+  if (!selected.length){
+    $sel.innerHTML = `<div class="item">No selections yet. Choose actions within strategies above.</div>`;
+  } else {
+    $sel.innerHTML = selected.map(catBlock=>{
+      const catTitle = labelFor(catBlock.category, "title_en", "title_es");
+      const groupsHtml = catBlock.groups.map(g=>{
+        const stTitle = labelFor(g.strategy, "title_en", "title_es");
+        const actsHtml = g.actions.map(a=>`<li><strong>${labelFor(a,"label_en","label_es")}</strong> — <span class="muted">${blurbFor(a)}</span></li>`).join("");
+        return `<div class="item"><div><strong>${stTitle}</strong></div><ul>${actsHtml}</ul></div>`;
+      }).join("");
+      return `<div><h4>${catTitle}</h4>${groupsHtml}</div>`;
+    }).join("");
+  }
+
+  // Assistance & Contractors placeholders (these will be location-aware later)
+  document.getElementById("assistList").innerHTML = `<div class="item">Programs will appear here based on your selections.</div>`;
+  document.getElementById("contractList").innerHTML = `<div class="item">Contractors will appear here when available.</div>`;
+
+  // Reveal report & sticky footer
+  document.getElementById("report").style.display = "";
+  document.getElementById("footerCtas").style.display = "";
+}
+
+function init(){
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const g=document.getElementById('genReport');
+    if(g){ g.addEventListener('click', ()=>{ generateReport(); document.getElementById('report').scrollIntoView({behavior:'smooth', block:'start'}); }); }
+  });
+  const genBtn = document.getElementById('genReport');
+  if(genBtn){ genBtn.addEventListener('click', ()=>{ generateReport(); document.getElementById('report').scrollIntoView({behavior:'smooth', block:'start'}); }); }
+  document.getElementById("lang-en").addEventListener("click", ()=>{ LANG="en"; localStorage.setItem("emberraven_lang","en"); applyI18n(); renderCategories(); });
+  document.getElementById("lang-es").addEventListener("click", ()=>{ LANG="es"; localStorage.setItem("emberraven_lang","es"); applyI18n(); renderCategories(); });
+  applyI18n();
+
+  const renter = document.getElementById("isRenter");
+  renter.checked = !!(localStorage.getItem("emberraven_isRenter")==="true");
+  renter.setAttribute("aria-checked", renter.checked ? "true" : "false");
+  renter.addEventListener("change", ()=>{
+    const val = renter.checked;
+    localStorage.setItem("emberraven_isRenter", String(val));
+    renter.setAttribute("aria-checked", val ? "true" : "false");
+    renderChips();
+  });
+
+  renderCategories();
+}
+init();
+</script>
+
+<!-- Google Maps placeholder -->
+<script>
+let gmap;
+function initGMap() {
+  gmap = new google.maps.Map(document.getElementById('gmap'), {
+    center: { lat: 42.4, lng: -123.3 }, zoom: 9, mapTypeControl: false, streetViewControl: false,
+  });
+}
+</script>
+<script>
+
+/* ------------------------------
+   Data (placeholder mock)
+   Replace with Airtable/Softr data sources later
+--------------------------------*/
+const CATEGORIES = [
+  { id:"plan",       icon:"🧭", title:"Plan for Wildfire",                     desc:"people, pets, insurance, alerts, livestock" },
+  { id:"harden",     icon:"🏠", title:"Harden Your Home",                      desc:"roofs, windows, siding, gutters, vents" },
+  { id:"defensible", icon:"🛡️", title:"Create Defensible Space (0–30 ft)",    desc:"Zone 0–5, 5–30, hardscape" },
+  { id:"forest",     icon:"🌲", title:"Treat Your Forest (+30 ft)",            desc:"biochar, prescribed fire, forest mgmt" },
+  { id:"infra",      icon:"🛠️", title:"Improve Your Infrastructure",          desc:"roads, erosion control, swales, driveway" },
+  { id:"neighbors",  icon:"👥", title:"Prepare with Neighbors",                desc:"Firewise, phone trees, mapping" },
+];
+
+const SUBACTIONS = {
+  plan: [
+    { id:"doc-belongings",   label:"Document Your Belongings", blurb:"Photos, serial numbers, inventory." },
+    { id:"get-notified",     label:"Get Notified when Wildfire is Near", blurb:"Sign up, configure local alerts." },
+    { id:"evac-plan",        label:"Make Your Evacuation Plan", blurb:"Routes, reunification, practice." },
+    { id:"know-responders",  label:"Know Your Responders", blurb:"Fire district, sheriff, emergency contacts." },
+    { id:"go-bag",           label:"Assemble Your Go-Bag", blurb:"Essentials for 72 hours." },
+    { id:"insurance",        label:"Confirm Your Insurance Coverage", blurb:"Coverage, endorsements, photos." },
+    { id:"livestock-plan",   label:"Make a Plan for Livestock", blurb:"Transport, shelter, feed." },
+    { id:"pets-plan",        label:"Make a Plan for Pets", blurb:"Crates, meds, tags, contacts." },
+    { id:"safeguard-docs",   label:"Safeguard Critical Documents", blurb:"Backups, fire safe, cloud." },
+    { id:"smoke-prep",       label:"Prepare for Smoke in the Air", blurb:"Masks, filters, clean room." },
+    { id:"home-assess",      label:"Assess Your Home for Wildfire Risk", blurb:"DIY checklist or pro assessment." },
+  ],
+
+  harden: [
+    { id:"upgrade-doors-windows", label:"Upgrade Doors and Windows", blurb:"Tempered glass, solid doors, seals." },
+    { id:"upgrade-siding",        label:"Upgrade Siding", blurb:"Ignition-resistant materials, repairs." },
+    { id:"replace-vents",         label:"Replace Vents with Metal Mesh", blurb:"≤ 1/8\" mesh to block embers." },
+    { id:"clean-gutters",         label:"Clean Your Gutters", blurb:"Remove needles/leaves regularly." },
+    { id:"safe-way-in-out",       label:"Make a Safe Way In & Out", blurb:"Clear access around entries/exits." },
+    { id:"clean-roof",            label:"Clean Your Roof", blurb:"Clear debris from roof and valleys." },
+  ],
+
+  defensible: [
+    { id:"zone0",                 label:"Clear 0–5 Foot Zone Around House", blurb:"Non-combustible buffer at the wall." },
+    { id:"zone1-landscape",       label:"Create 5–30 Foot Firesafe Landscape", blurb:"Spacing, pruning, reduce fuels." },
+    { id:"add-hardscape",         label:"Add Hardscape around Your Home (Rock, Stone, Gravel)", blurb:"Paths, borders, patios." },
+    { id:"prune-remove-trees",    label:"Prune and Remove Trees", blurb:"Eliminate ladder fuels near home." },
+    { id:"restore-natives",       label:"Restore Native Species", blurb:"Resilient, site-appropriate plants." },
+    { id:"fire-resistant-plants", label:"Find Fire-Reluctant Plants", blurb:"Plant lists, placement guidance." },
+    { id:"rainwater-rooftop",     label:"Harvest Your Rainwater for Rooftop Sprinklers", blurb:"Tanks, pumps, rooftop lines." },
+    { id:"decks-fencing",         label:"Upgrade or Remove Decks and Fencing", blurb:"Break ember pathways." },
+    { id:"irrigate-defensible",   label:"Irrigate your Defensible Space", blurb:"Keep plants hydrated and maintained." },
+  ],
+
+  forest: [
+    { id:"learn-biochar",         label:"Learn About Biochar", blurb:"Benefits, production, soil integration." },
+    { id:"remove-wood-debris",    label:"Remove & Cleanup Wood Debris", blurb:"Slash, piles, disposal/utilization." },
+    { id:"forest-plan",           label:"Make a Forest Management Plan", blurb:"Goals, schedule, prescriptions." },
+    { id:"fuel-breaks",           label:"Create Fuel Breaks", blurb:"Strategic linear reductions." },
+    { id:"itek",                  label:"Integrate Indigenous Traditional Ecological Knowledge (ITEK)", blurb:"TEC-aligned practices." },
+    { id:"introduce-healthy-fire",label:"Introduce Healthy Fire To Your Forest", blurb:"Rx fire with qualified experts." },
+    { id:"restore-waterways",     label:"Restore Your Waterways", blurb:"Stabilize banks, protect riparian zones." },
+    { id:"sustain-logging",       label:"Harvest Your Timber Sustainably", blurb:"Low-impact, compliance, markets." },
+    { id:"reduce-flammable-fuels",label:"Reduce Flammable Fuels on Your Land", blurb:"Thinning, mastication, removal." },
+  ],
+
+  infra: [
+    { id:"manage-water-flow",     label:"Manage Your Water Flow", blurb:"Drainage, culverts, conveyance." },
+    { id:"move-earth",            label:"Move Some Earth", blurb:"Regrade, berms, cut/fill for protection." },
+    { id:"create-bioswales",      label:"Create Bio Swales", blurb:"Slow, spread, sink runoff." },
+    { id:"improve-driveway",      label:"Improve your Driveway", blurb:"Surface, width, turnouts." },
+    { id:"build-access-road",     label:"Build an Access Road", blurb:"Spec for emergency vehicle access." },
+  ],
+
+  neighbors: [
+    { id:"community-liaisons",    label:"Organize a Community Liaisons Program", blurb:"Points-of-contact & info flow." },
+    { id:"phone-tree",            label:"Organize a Neighborhood Phone Tree", blurb:"Rapid neighbor alerts." },
+    { id:"map-risks",             label:"Map Your Community Risks & Resources", blurb:"Shared situational awareness." },
+    { id:"volunteer",             label:"Find Ways to Volunteer", blurb:"Local orgs and work days." },
+    { id:"firewise",              label:"Start or Join a Firewise USA © Community", blurb:"Collective mitigation & education." },
+  ],
+};
+
+/* (JS unchanged below this line) */
+
+function mockEmergency() {
+  return [
+    { name:"Fire District", phone:"(555) 123-4567", link:"https://alerts.example.org" },
+    { name:"County Sheriff", phone:"(555) 765-4321", link:"https://sheriff.example.org" },
+    { name:"Local Alerts", phone:"", link:"https://signup.example.org" },
+  ];
+}
+function mockPrograms(selectedCats, subacts) {
+  const base = [
+    { name:"Defensible Space Rebate", desc:"Cost-share for near-home clearing.", tags:["Deadline Sept 30","Verified Aug 2025"], match:["defensible"] },
+    { name:"Home Hardening Grant", desc:"Offsets vent/window upgrades.", tags:["Open Now","Verified Aug 2025"], match:["harden"] },
+    { name:"Forest Thinning Cost-Share", desc:"Per-acre support for fuels reduction.", tags:["Waitlist","Verified Aug 2025"], match:["forest"] },
+    { name:"Community Mini-Grant", desc:"Neighborhood Firewise projects.", tags:["Quarterly","Verified Aug 2025"], match:["neighbors"] },
+  ];
+  return base.filter(p => p.match.some(m => selectedCats.includes(m)));
+}
+function mockContractors(selectedCats, subacts) {
+  const base = [
+    { name:"Evergreen Arborists", services:["Prune and Remove Trees","Arborist / Tree Removal"], area:"Jackson/Josephine", status:"Verified Aug 2025" },
+    { name:"SparkSafe Roofing", services:["Clean Your Roof","Clean Your Gutters","Replace Vents with Metal Mesh"], area:"Rogue Valley", status:"Insured" },
+    { name:"ShieldScape", services:["Clear 0–5 Foot Zone Around House","Add Hardscape around Your Home (Rock, Stone, Gravel)","Upgrade or Remove Decks and Fencing"], area:"Applegate", status:"Community Verified" },
+    { name:"LandCare Fuels", services:["Reduce Flammable Fuels on Your Land","Remove & Cleanup Wood Debris"], area:"South County", status:"Verified Aug 2025" },
+  ];
+  return base.filter(c => c.services.some(s => subacts.some(sa => s.label && s.includes(sa.label))));
+}
+function microcardsFor(subacts){
+  const picks = subacts.slice(0,2).map(sa => ({
+    title: sa.label,
+    why: sa.label.includes("Vent") ? "Embers enter openings > 1/8\"." : "Reduces ember ignition risk.",
+    how: sa.label.includes("Vent") ? "Install ember-resistant mesh vents." : "Remove fuels and maintain clearances.",
+    link: "#"
+  }));
+  if (picks.length===0) picks.push({title:"Firesafe Landscaping", why:"Plants near walls act like kindling.", how:"Swap bark mulch for gravel near siding.", link:"#"});
+  return picks;
+}
+function suggestExpansions(selectedCats){
+  const pool = [
+    { cat:"plan", title:"Plan for Wildfire: Go Bag" },
+    { cat:"neighbors", title:"Prepare with Neighbors: Firewise Group" },
+    { cat:"infra", title:"Improve Infrastructure: Fuel Breaks" }
+  ];
+  return pool.filter(s => !selectedCats.includes(s.cat)).slice(0,2);
+}
+
+/* ------------------------------
+   State & rendering
+--------------------------------*/
+const state = { address:null, selectedCats:[], subSelections:{} };
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+function renderCategories(){
+  const wrap = $("#categories");
+  wrap.innerHTML = "";
+  CATEGORIES.forEach(cat=>{
+    const card = document.createElement("button");
+    card.className="card-toggle";
+    card.type="button";
+    card.setAttribute("role","button");
+    card.setAttribute("aria-pressed", state.selectedCats.includes(cat.id) ? "true":"false");
+    card.dataset.cat = cat.id;
+    card.innerHTML = `
+      <div class="ico">${cat.icon}</div>
+      <div>
+        <div class="title">${cat.title}</div>
+        <div class="desc">${cat.desc}</div>
+      </div>`;
+    card.addEventListener("click", ()=>toggleCategory(cat.id));
+    wrap.appendChild(card);
+  });
+  renderChips();
+}
+
+function renderChips(){
+  const chipbar = $("#chips");
+  chipbar.innerHTML = state.selectedCats.map(id=>{
+    const cat = CATEGORIES.find(c=>c.id===id);
+    return `<span class="chip">${cat.icon} ${cat.title}</span>`;
+  }).join("");
+  $("#catWarn").style.display = "none";
+  $("#accordion").style.display = state.selectedCats.length>0 ? "" : "none";
+  if (state.selectedCats.length>0) renderAccordion();
+}
+
+function toggleCategory(id){
+  const i = state.selectedCats.indexOf(id);
+  if (i>=0){ state.selectedCats.splice(i,1); }
+  else{
+    state.selectedCats.push(id); // no cap now
+  }
+  $("#report").style.display="none";
+  $("#footerCtas").style.display="none";
+  renderCategories();
+}
+
+function renderAccordion(){
+  const acc = $("#accordion");
+  acc.innerHTML = "";
+  state.selectedCats.forEach((catId, idx)=>{
+    const cat = CATEGORIES.find(c=>c.id===catId);
+    const open = idx===0 ? "true" : "false";
+    const item = document.createElement("div");
+    item.className="acc-item";
+    item.dataset.cat = catId;
+    item.setAttribute("data-open", open);
+
+    const subs = SUBACTIONS[catId] || [];
+    const subHtml = subs.map(sa=>{
+      const pressed = state.subSelections[catId]?.has(sa.id) ? "true":"false";
+      return `<button type="button" class="sub-toggle" role="button" aria-pressed="${pressed}" data-sub="${sa.id}">
+        <strong>${sa.label}</strong><br><span class="muted">${sa.blurb}</span>
+      </button>`;
+    }).join("");
+
+    item.innerHTML = `
+      <div class="acc-head" role="button" aria-controls="body-${catId}" aria-expanded="${open}">
+        <span>${cat.icon} ${cat.title}</span>
+        <span>▼</span>
+      </div>
+      <div id="body-${catId}" class="acc-body">
+        <div class="subgrid">${subHtml}</div>
+        <div class="acc-actions">
+          <button class="btn small ghost" data-act="skip">Skip</button>
+          <button class="btn small" data-act="continue">Continue</button>
+        </div>
+      </div>
+    `;
+    acc.appendChild(item);
+  });
+
+  $$("#accordion .acc-head").forEach(head=>{
+    head.addEventListener("click", ()=>{
+      const item = head.parentElement;
+      const isOpen = item.getAttribute("data-open")==="true";
+      item.setAttribute("data-open", isOpen?"false":"true");
+    });
+  });
+  $$("#accordion .sub-toggle").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const catId = btn.closest(".acc-item").dataset.cat;
+      const subId = btn.dataset.sub;
+      state.subSelections[catId] ||= new Set();
+      if (btn.getAttribute("aria-pressed")==="true"){
+        btn.setAttribute("aria-pressed","false");
+        state.subSelections[catId].delete(subId);
+      } else {
+        btn.setAttribute("aria-pressed","true");
+        state.subSelections[catId].add(subId);
+      }
+    });
+  });
+  $$("#accordion .acc-actions .btn").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const action = b.dataset.act;
+      const item = b.closest(".acc-item");
+      const all = $$("#accordion .acc-item");
+      const idx = all.indexOf(item);
+      if (action==="continue" || action==="skip"){
+        item.setAttribute("data-open","false");
+        const next = all[idx+1];
+        if (next){ next.setAttribute("data-open","true"); next.scrollIntoView({behavior:"smooth",block:"start"}); }
+        else { generateReport(); document.getElementById("report").scrollIntoView({behavior:"smooth",block:"start"}); }
+      }
+    });
+  });
+}
+
+function generateReport(){
+  const cats = [...state.selectedCats];
+  const subacts = [];
+  cats.forEach(c=>{
+    const ids = [...(state.subSelections[c]||[])];
+    const full = (SUBACTIONS[c]||[]).filter(sa=>ids.includes(sa.id));
+    subacts.push(...full);
+  });
+
+  const catTitles = cats.map(id=>CATEGORIES.find(c=>c.id===id).title).join(" + ");
+  $("#reportBasedOn").textContent = `Based on your focus: ${catTitles}`;
+
+  const emergency = mockEmergency();
+  const $elist = $("#emergencyList");
+  $elist.innerHTML = emergency.map(e=>`
+    <div class="item">
+      <strong>${e.name}</strong><br/>
+      ${e.phone?`📞 ${e.phone} &nbsp;`:''}${e.link?`<a href="${e.link}">Website/Alerts →</a>`:''}
+    </div>
+  `).join("");
+
+  const programs = mockPrograms(cats, subacts);
+  const $plist = $("#assistList");
+  $plist.innerHTML = programs.length ? programs.map(p=>`
+    <div class="item">
+      <strong>💰 ${p.name}</strong><br/>
+      <span class="muted">${p.desc}</span><br/>
+      ${p.tags.map(t=>`<span class="tag">${t}</span>`).join(' ')}
+      <div style="margin-top:6px"><a href="#">Apply / Learn more →</a></div>
+    </div>
+  `).join("") : `<div class="item">No programs right now. Try another focus area.</div>`;
+
+  const contr = mockContractors(cats, subacts);
+  const $clist = $("#contractList");
+  if (!contr.length){
+    $clist.innerHTML = `<div class="item">No contractors found nearby — try refining or another focus area.</div>`;
+  } else {
+    const first = contr.slice(0,10);
+    $clist.innerHTML = first.map(c=>`
+      <div class="item">
+        <strong>👷 ${c.name}</strong><br/>
+        Services: ${c.services.map(s=>`<span class="tag">${s}</span>`).join(' ')}<br/>
+        Area: ${c.area} &nbsp; • &nbsp; Status: ${c.status}
+      </div>
+    `).join("");
+    if (contr.length>10){
+      $clist.innerHTML += `
+        <div class="item">
+          We found ${contr.length} contractors near you.
+          <div style="margin-top:6px">
+            <button class="btn small">Filter by Distance</button>
+            <button class="btn small">Filter by Budget</button>
+            <button class="btn small">Filter by Availability</button>
+          </div>
+        </div>`;
+    }
+  }
+
+  const micros = microcardsFor(subacts);
+  const $learn = $("#learnList");
+  const extra = micros.map(m=>`
+    <div class="item">
+      <strong>📚 ${m.title}</strong><br/>
+      <em>Why:</em> ${m.why}<br/>
+      <em>How:</em> ${m.how}<br/>
+      <a href="${m.link}">Read full guide →</a>
+    </div>`).join("");
+  $learn.insertAdjacentHTML("afterbegin", extra);
+
+  const sugg = suggestExpansions(cats);
+  const $exp = $("#expandList");
+  $exp.innerHTML = sugg.map(s=>`
+    <div class="item">
+      <strong>${s.title}</strong><br/>
+      <button class="btn small" onclick="addExpansion('${s.cat}')">Add to Report →</button>
+    </div>
+  `).join("");
+
+  $("#report").style.display="";
+  $("#footerCtas").style.display="";
+}
+
+function addExpansion(catId){
+  if (!state.selectedCats.includes(catId)){
+    state.selectedCats.push(catId); // no cap
+    const subs = (SUBACTIONS[catId]||[]).slice(0,2).map(sa=>sa.id);
+    state.subSelections[catId] = new Set(subs);
+    renderCategories();
+    renderAccordion();
+  }
+  generateReport();
+}
+
+/* ------------------------------
+   Initialize
+--------------------------------*/
+function init(){
+  renderCategories();
+  $("#useAddr").addEventListener("click", ()=>{
+    state.address = $("#addr").value || null;
+    alert(state.address ? `Using address: ${state.address}` : "No address provided.");
+  });
+  $("#skipAddr").addEventListener("click", ()=>{
+    state.address = null;
+    alert("Continuing without an address.");
+  });
+}
+init();
+
+</script>
+
+</body>
+</html>
